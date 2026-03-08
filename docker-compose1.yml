@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+  db:
+    image: postgres:15
+    container_name: openproject-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: openproject
+      POSTGRES_USER: openproject
+      POSTGRES_PASSWORD: strongpassword
+    volumes:
+      - openproject-db:/var/lib/postgresql/data
+
+  cache:
+    image: redis:7
+    container_name: openproject-redis
+    restart: unless-stopped
+
+  openproject:
+    image: openproject/community:latest
+    container_name: openproject
+    restart: unless-stopped
+    depends_on:
+      - db
+      - cache
+    environment:
+      DATABASE_URL: postgres://openproject:strongpassword@db:5432/openproject
+      OPENPROJECT_SECRET_KEY_BASE: supersecretkey123
+      OPENPROJECT_HOST__NAME: pm.aient.co
+      OPENPROJECT_HTTPS: true
+    ports:
+      - "8080:80"
+    volumes:
+      - openproject-assets:/var/openproject/assets
+
+volumes:
+  openproject-db:
+  openproject-assets:
